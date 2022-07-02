@@ -6,7 +6,7 @@ from django.db import models
 class Question(models.Model):
     text = models.TextField()
     
-class QuestionAnswer():
+class QuestionAnswer(models.Model):
     text = models.TextField()
     correct = models.BooleanField()
     question = models.ForeignKey("Question", on_delete = models.CASCADE)
