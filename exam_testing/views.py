@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from .models import *
+import os
 
+templates_path = os.path.abspath(__file__)[:-8] + 'templates/exam_testing/'
 
 def headpage(request):
     list_attempts = []
@@ -33,7 +35,7 @@ def headpage(request):
     username = request.POST.get('username')
     self_progr = None
     list_of_user_tests = []
-    if username != '-1':
+    if username is not None:
         usr = User.objects.get(username=username)
         user_tests = list(Test.objects.filter(user=usr))
         takes = []
@@ -61,5 +63,5 @@ def headpage(request):
                     done_qsts2[test_quest.question] = False
         self_progr = len(list(filter(lambda x: x == True, done_qsts2.values())))
 
-    return render(request, 'exam_testing/headpage.html', context={'list_elems': list_attempts, 'username': username,
+    return render(request, templates_path+'headpage.html', context={'list_elems': list_attempts, 'username': username,
                                                                   'self_progr': self_progr, 'list_of_user_tests': list_of_user_tests})
