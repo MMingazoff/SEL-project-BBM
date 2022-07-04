@@ -50,6 +50,7 @@ def headpage(request):
             takes.append(done2)
             takes.append(len(TestQuestions.objects.filter(test=test_2)))
             takes.append(test_2.finish_date)
+            list_of_user_tests.append(takes)
         done_qsts2 = dict()
         for qst in Question.objects.all():
             done_qsts2[qst] = False

@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="ru">
 
+{% load static %}
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -66,12 +68,12 @@
             <br>
             <br>
             <div style="width: 25rem;">
-                <img src="imgs/cse1.jpg" class="card-img-top">
+                <img src="{% static 'exam_testing/cse1.jpg' %}" class="card-img-top">
                 <div align="center">
                     <h5 class="card-title">Пройти тест по информатике</h5>
                     <p class="card-text">Подготовка к экзамену у Абрамского - Информатика 2 семестр, 1 курс</p>
 
-                    {% if username == '-1' %}
+                    {% if username == None %}
                         <a class="btn btn-primary disabled" aria-disabled="true" role="button" data-bs-toggle="button"
                            style="width: 50%;" href="">ТЕСТ</a>
                     {% else %}
@@ -90,7 +92,7 @@
             </div>
             <br>
 
-            {% if username != '-1' %}
+            {% if username != None %}
 
                 <div class="progress" style="width: 70%;">
                     <div class="progress-bar" role="progressbar" style="width: {{ self_progr }}%;" aria-valuenow="{{ self_progr }}" aria-valuemin="0"
