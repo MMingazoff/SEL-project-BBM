@@ -1,8 +1,14 @@
+from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.db import models
 
+class User(AbstractUser):
+    secret_question = models.IntegerField(default=0, blank=True, null=True)
+    secret_question_answer = models.CharField(max_length=100, default=None, blank=True, null=True)
+
 class Question(models.Model):
     text = models.TextField()
+    create_date = models.DateTimeField(auto_now_add=True)
     
 class QuestionAnswer(models.Model): # ответ на каждый чекбокс
     text = models.TextField()
