@@ -1,6 +1,8 @@
-from django.shortcuts import render
+from django.contrib.auth.models import AnonymousUser
+from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth import login, logout
 from .models import User, Test, TestQuestions, QuestionAnswer, Question, UserAttempt
 import os
 
@@ -17,24 +19,6 @@ def test(request):
 
 def test_results(request):
     return HttpResponse('Test results')
-
-
-def register(request):
-    if request.method == 'GET':
-        return render(request, templates_path + 'register.html')
-    if request.method == 'POST':
-        if not User.objects.filter(username=request.POST.get('login')).exists():
-            if request.POST.get('password') != request.POST.get('password_two'):
-                return render(request, templates_path + 'register.html', {'error': 'Пароли не совпадают'})
-            user = User.objects.create_user(username=request.POST.get('login'),
-                                            password=request.POST.get('password'),
-                                            secret_question=request.POST.get('secret_question'),
-                                            secret_question_answer=make_password(request.POST.get('secret_question_answer'))
-                                            )
-        else:
-            return render(request, templates_path + 'register.html', {'error': 'Такое имя пользователя занято'})
-        user.save()
-        return HttpResponseRedirect('/login/')
 
 
 def headpage(request):
@@ -65,12 +49,11 @@ def headpage(request):
         progr = int(done_all_quests/len(Question.objects.all())) * 100
         date = test.finish_date
         list_attempts.append([us_name, tst_nm, qsts_done, qsts_cnt, progr, date])
-    username = request.POST.get('username')
+    user = request.user
     self_progr = None
     list_of_user_tests = []
-    if username is not None:
-        usr = User.objects.get(username=username)
-        user_tests = list(Test.objects.filter(user=usr))
+    if not user.is_anonymous:
+        user_tests = list(Test.objects.filter(user=user))
         takes = []
         for test_2 in user_tests:
             takes.append(test_2.num)
@@ -87,7 +70,7 @@ def headpage(request):
         done_qsts2 = dict()
         for qst in Question.objects.all():
             done_qsts2[qst] = False
-        for ot_test in Test.objects.filter(user=usr).order_by('id'):
+        for ot_test in Test.objects.filter(user=user).order_by('id'):
             for test_quest in TestQuestions.objects.filter(test=ot_test):
                 left = QuestionAnswer.objects.filter(question=test_quest.question, correct=True)
                 right = list(map(lambda x: x.question, UserAttempt.objects.filter(test=ot_test, question=test_quest.question)))
@@ -97,5 +80,72 @@ def headpage(request):
                     done_qsts2[test_quest.question] = False
         self_progr = len(list(filter(lambda x: x == True, done_qsts2.values())))
 
-    return render(request, templates_path+'headpage.html', context={'list_elems': list_attempts, 'username': username,
-                                                                  'self_progr': self_progr, 'list_of_user_tests': list_of_user_tests})
+    return render(request, templates_path+'headpage.html', context={'list_elems': list_attempts,
+                                                                    'self_progr': self_progr,
+                                                                    'list_of_user_tests': list_of_user_tests,
+                                                                    'request': request})
+
+
+def register(request):
+    if request.method == 'GET':
+        return render(request, templates_path + 'register.html')
+    if request.method == 'POST':
+        if not User.objects.filter(username=request.POST.get('login')).exists():
+            if request.POST.get('password') != request.POST.get('password_two'):
+                return render(request, templates_path + 'register.html', {'error': 'Пароли не совпадают'})
+            user = User.objects.create_user(username=request.POST.get('login'),
+                                            password=request.POST.get('password'),
+                                            secret_question=request.POST.get('secret_question'),
+                                            secret_question_answer=make_password(request.POST.get('secret_question_answer'))
+                                            )
+        else:
+            return render(request, templates_path + 'register.html', {'error': 'Такое имя пользователя занято'})
+        user.save()
+        return redirect('/login/')
+
+
+def user_logout(request):
+    logout(request)
+    return redirect("/")
+
+
+def user_login(request):
+    if request.method == 'GET':
+        return render(request, templates_path + 'login.html')
+    if request.method == 'POST':
+        if User.objects.filter(username=request.POST.get('login')).exists():
+            user = User.objects.get(username=request.POST.get('login'))
+        else:
+            return render(request, templates_path + 'login.html', {'error': 'Такого пользователя не существует'})
+        if user.check_password(request.POST.get('password')):
+            login(request, user)
+            return redirect('/')
+        else:
+            return render(request, templates_path + 'login.html', {'error': 'Неверный пароль'})
+
+
+def recover_password(request):
+    if request.method == 'GET':
+        if request.GET.get('login'):
+            if User.objects.filter(username=request.GET.get('login')).exists():
+                user = User.objects.get(username=request.GET.get('login'))
+                return render(request, templates_path + 'password_recovery.html', {'secret_question': user.secret_question, 'login': request.GET.get('login')})
+            else:
+                return render(request, templates_path + 'password_recovery_startpage.html', {'error': 'Такого пользователя не существует'})
+        else:
+            return render(request, templates_path + 'password_recovery_startpage.html')
+    if request.method == 'POST':
+        user = User.objects.get(username=request.POST.get('login'))
+        if check_password(request.POST.get('secret_question_answer'), user.secret_question_answer):
+            if request.POST.get('password') != request.POST.get('password_two'):
+                return render(request, templates_path + 'password_recovery.html', {'secret_question': user.secret_question,
+                                                                                   'error': 'Пароли не совпадают',
+                                                                                   'login': request.POST.get('login')})
+            else:
+                user.set_password(request.POST.get('password'))
+                user.save()
+                return redirect('/login/')
+        else:
+            return render(request, templates_path + 'password_recovery.html', {'secret_question': user.secret_question,
+                                                                               'error': 'Ответ на контрольный вопрос неверный',
+                                                                               'login': request.POST.get('login')})
