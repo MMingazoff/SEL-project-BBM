@@ -125,11 +125,12 @@ AUTH_USER_MODEL = 'exam_testing.User'
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-    'exam_testing/static/',
+    os.path.join(BASE_DIR, 'exam_testing/static/'),
 ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/login'
