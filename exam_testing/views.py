@@ -27,6 +27,10 @@ def headpage(request):
         return render(request, templates_path+'headpage_anon.html')
 
     username = request.user.username
+    last_tests = Test.get_last_tests()
+    self_progr = request.user.progress()
+    user_tests = request.user.all_user_tests()
+
 
     return render(request, templates_path+'headpage.html', context={'list_elems': list_attempts,
                                                                     'self_progr': self_progr,

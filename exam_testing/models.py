@@ -23,8 +23,8 @@ class User(AbstractUser):
         return test.num, result
 
     def progress(self):
-        done_all_quests = len(QuestionUser.objects.filter(done=2))
-        progr = int(done_all_quests/len(Question.objects.all())) * 100
+        done_quests = len(QuestionUser.objects.filter(done=2))
+        progr = int(done_quests/len(Question.objects.all())) * 100
         return progr
 
     def all_user_tests(self):
