@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
@@ -22,6 +23,8 @@ def test_results(request):
 
 
 def headpage(request):
+    if not request.user.is_authenticated:
+        return render(request, templates_path+'headpage_anon.html')
     list_attempts = []
     for test in Test.objects.order_by("-id")[0:15]:
         us_name = test.user.username
