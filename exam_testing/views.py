@@ -31,11 +31,8 @@ def headpage(request):
     self_progr = request.user.progress()
     user_tests = request.user.all_user_tests()
 
-
-    return render(request, templates_path+'headpage.html', context={'list_elems': list_attempts,
-                                                                    'self_progr': self_progr,
-                                                                    'list_of_user_tests': list_of_user_tests,
-                                                                    'request': request})
+    return render(request, templates_path+'headpage.html', context={'username': username, 'last_tests': last_tests,
+                                                                    'self_progr': self_progr, 'user_tests': user_tests})
 
 
 def register(request):
