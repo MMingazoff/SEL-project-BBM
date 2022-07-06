@@ -49,93 +49,29 @@
             <div class="col">
                 <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true"
                     class="scrollspy-example" tabindex="0">
-
                     <form method="GET" action="" id="myform"></form>
+                        <ul>
+                            {% for question in questions %}
+                                <div id="list-item-1" class="card" style="width: 90%;margin-bottom: 8px;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Вопрос <td>{{ forloop.counter }}</td></h5>
+                                        <p class="card-text">{{question.text}}</p>
+                                        {%for answers in list_of_answer%}
+                                            {%for answer in answers%}
 
-                    <div id="list-item-1" class="card" style="width: 90%;margin-bottom: 8px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Вопрос 1</h5>
-                            <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis libero
-                                erat, maximus a urna et, consequat sollicitudin massa. In hendrerit lorem ut aliquet
-                                tempus. Sed ut vehicula orci. Aliquam hendrerit mi sit amet massa venenatis eleifend.
-                                Suspendisse ex sapien, placerat sed risus id, mollis eleifend elit. Cras volutpat
-                                sodales ligula, volutpat dignissim dolor pulvinar ut. Nunc hendrerit ligula enim, id
-                                tristique arcu porttitor non. Sed vel varius leo. Sed accumsan, magna eget iaculis
-                                dignissim, est metus posuere ex, at rhoncus arcu odio vitae justo. Morbi nec libero
-                                dignissim, blandit ex imperdiet, lobortis nunc. Suspendisse imperdiet consectetur augue,
-                                a pulvinar est fermentum interdum. Donec ut facilisis libero. Curabitur non eros eu arcu
-                                accumsan varius ut at sem. Etiam luctus ac augue ac tincidunt. Lorem ipsum dolor sit
-                                amet, consectetur adipiscing elit. Nullam dictum placerat ex id congue.
-
-                                Aenean euismod porta mauris, eu blandit neque laoreet in. Aenean sodales elit nec turpis
-                                vehicula, sit amet hendrerit urna faucibus. Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit. Praesent accumsan sit amet nisi et tempor. Donec arcu turpis, tempus
-                                non leo nec, bibendum tristique orci. Vestibulum dolor ante, aliquet sed gravida non,
-                                tempus dapibus arcu. Praesent dictum accumsan ante quis gravida. Praesent nec ipsum in
-                                tortor bibendum placerat in vitae ligula. Vestibulum semper id mauris eu viverra.</p>
-
-
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
-                                    name="q_1" value="ans_id_1">
-                                <label class="form-check-label" for="flexCheckDefault">
-                                    Вариант ответа такой-то
-                                </label>
-                            </div>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
-                                    name="q_1" value="ans_id_2">
-                                <label class="form-check-label" for="flexCheckDefault">
-                                    Вариант ответа такой-то
-                                </label>
-                            </div>
-
-                        </div>
-                    </div>
-
-                    <div id="list-item-2" class="card" style="width: 90%;margin-bottom: 8px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Вопрос 2</h5>
-                            <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis libero
-                                erat, maximus a urna et, consequat sollicitudin massa. In hendrerit lorem ut aliquet
-                                tempus. Sed ut vehicula orci. Aliquam hendrerit mi sit amet massa venenatis eleifend.
-                                Suspendisse ex sapien, placerat sed risus id, mollis eleifend elit. Cras volutpat
-                                sodales ligula, volutpat dignissim dolor pulvinar ut. Nunc hendrerit ligula enim, id
-                                tristique arcu porttitor non. Sed vel varius leo. Sed accumsan, magna eget iaculis
-                                dignissim, est metus posuere ex, at rhoncus arcu odio vitae justo. Morbi nec libero
-                                dignissim, blandit ex imperdiet, lobortis nunc. Suspendisse imperdiet consectetur augue,
-                                a pulvinar est fermentum interdum. Donec ut facilisis libero. Curabitur non eros eu arcu
-                                accumsan varius ut at sem. Etiam luctus ac augue ac tincidunt. Lorem ipsum dolor sit
-                                amet, consectetur adipiscing elit. Nullam dictum placerat ex id congue.
-
-                                Aenean euismod porta mauris, eu blandit neque laoreet in. Aenean sodales elit nec turpis
-                                vehicula, sit amet hendrerit urna faucibus. Lorem ipsum dolor sit amet, consectetur
-                                adipiscing elit. Praesent accumsan sit amet nisi et tempor. Donec arcu turpis, tempus
-                                non leo nec, bibendum tristique orci. Vestibulum dolor ante, aliquet sed gravida non,
-                                tempus dapibus arcu. Praesent dictum accumsan ante quis gravida. Praesent nec ipsum in
-                                tortor bibendum placerat in vitae ligula. Vestibulum semper id mauris eu viverra.</p>
-
-
-                            <div class="form-check mb-1">
-                                <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
-                                    name="q_2" value="ans_id_3">
-                                <label class="form-check-label" for="flexCheckDefault">
-                                    Вариант ответа такой-то
-                                </label>
-                            </div>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
-                                    name="q_2" value="ans_id_4">
-                                <label class="form-check-label" for="flexCheckDefault">
-                                    Вариант ответа такой-то
-                                </label>
-                            </div>
-
-                        </div>
-                    </div>
-
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
+                                                        name="q_" value="ans_id_">
+                                                    <label class="form-check-label" for="flexCheckDefault">
+                                                        {{answer.text}}
+                                                    </label>
+                                                </div>
+                                                {%endfor%}
+                                        {%endfor%}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </ul>
                     <input style="margin-left: 38%;margin-top: 2%;margin-bottom: 8%;width: 15%;" type="submit"
                         value="Отправить" form="myform" class="btn btn-primary">
                 </div>

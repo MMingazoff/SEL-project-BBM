@@ -5,6 +5,8 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import login, logout
 from .models import User, Test, TestQuestions, QuestionAnswer, Question, UserAttempt
 import os
+import random
+
 
 templates_path = os.path.abspath(__file__)[:-8] + 'templates/exam_testing/'
 
@@ -14,8 +16,18 @@ def main_page(request):
 
 
 def test(request):
-    return HttpResponse('Testing page')
-
+    n = 9  # QUESTION_NUM
+    questions = Question.objects.all()
+    questions = random.shuffle(questions)
+    questions = questions[0:n]
+    list_of_answers = {}
+    i=1
+    for question in questions:
+        answers_list = QuestionAnswer.objects.filter( question = question)
+        list_of_answers.append(answers_list)
+        i+=1
+    
+    return render(request, templates_path+"test.html", context={"questions": questions,"list_of_answer": list_of_answers})
 
 def test_results(request):
     return HttpResponse('Test results')
@@ -84,8 +96,24 @@ def headpage(request):
                                                                     'self_progr': self_progr,
                                                                     'list_of_user_tests': list_of_user_tests,
                                                                     'request': request})
-
-
+'''
+def test(request):
+    questions = Question.objects.all()
+    dict_of_questions_answers = {}
+    dict_of_questions = {}
+    q=1
+    for question in questions:
+        small_dict_of_question = {}
+        answers_list = QuestionAnswer.objects.filter( question = question)
+        q1= 1
+        for answer in answers_list:
+            small_dict_of_question[f'question_answer{q1}'] = answer.text
+            q+=1
+        dict_of_questions[f'question{q}'] = question.text
+        dict_of_questions_answers[f'question{q}'] = small_dict_of_question
+        q+=1
+    return render(request, templates_path+'test.html', context = {'dict_of_question': dict_of_questions, 'dict_of_questions_answers' : dict_of_questions_answers})
+'''
 def register(request):
     if request.method == 'GET':
         return render(request, templates_path + 'register.html')
