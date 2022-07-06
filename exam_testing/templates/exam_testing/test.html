@@ -55,7 +55,7 @@
         <div class="col">
             <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true"
                  class="scrollspy-example" tabindex="0">
-                <form method="GET" action="" id="myform"></form>
+                <form method="POST" action="/" id="myform">{% csrf_token %}</form>
                 {% for num, question, question_answers in test_questions %}
                     <div id="list-item-{{ num }}" class="card" style="width: 90%;margin-bottom: 8px;">
                         <div class="card-body">

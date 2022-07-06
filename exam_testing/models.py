@@ -26,6 +26,14 @@ class User(AbstractUser):
         test.save()
         return test.num, result
 
+    def progress(self):
+        done_quests = len(QuestionUser.objects.filter(done=2))
+        progr = int(done_quests/len(Question.objects.all())) * 100
+        return progr
+
+    def all_user_tests(self):
+        return list(Test.objects.filter(user=self).order_by('-id'))
+
 
 class Question(models.Model):
     class Meta:
@@ -89,7 +97,7 @@ class Test(models.Model):
 
     def count_of_done(self):
         cnt = 0
-        for quest in self.questions.objects:
+        for quest in self.questions.all():
             first = set(QuestionAnswer.objects.filter(question=quest, correct=True))
             second = set(map(lambda x: x.question_answer, UserAttempt.objects.filter(test=self, question=quest)))
             if len(first ^ second) == 0:
@@ -97,5 +105,5 @@ class Test(models.Model):
         return cnt
 
     def questions_count(self):
-        return len(self.questions)
+        return len(self.questions.all())
 

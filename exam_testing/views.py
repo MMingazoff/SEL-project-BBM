@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
@@ -14,7 +15,7 @@ def test_results(request):
 
 
 def headpage_non_auth(request):
-    return render(request, templates_path + 'headpage_anon.html')
+    return render(request, 'exam_testing/headpage_anon.html')
 
 
 @login_required(login_url='non_auth/')
@@ -24,7 +25,7 @@ def headpage(request):
     self_progr = request.user.progress()
     user_tests = request.user.all_user_tests()
 
-    return render(request, templates_path+'headpage.html', context={'username': username, 'last_tests': last_tests,
+    return render(request, 'exam_testing/headpage.html', context={'username': username, 'last_tests': last_tests,
                                                                     'self_progr': self_progr, 'user_tests': user_tests})
 def make_test(request):
     """Рендер страницы с тестом"""
