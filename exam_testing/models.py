@@ -9,9 +9,13 @@ class User(AbstractUser):
     secret_question_answer = models.TextField(default=None, blank=True, null=True)
 
     def generate_test_questions(self):
-        questions = list(chain(QuestionUser.objects.filter(user=self, done=0).order_by('?')[:6],
-                               QuestionUser.objects.filter(user=self, done=1).order_by('?')[:2],
-                               QuestionUser.objects.filter(user=self, done=2).order_by('?')[:1],
+        """
+        Генерация 9 случайных вопросов.
+        :return: номер теста, список кортежей с вопросом и кортежом вариантов ответов на вопрос
+        """
+        questions = list(chain(QuestionUser.objects.filter(user=self, done=0).order_by('?')[:6],  # неверные
+                               QuestionUser.objects.filter(user=self, done=1).order_by('?')[:2],  # частичные
+                               QuestionUser.objects.filter(user=self, done=2).order_by('?')[:1],  # верные
                                ))
         test = Test.objects.create(user=self, num=Test.objects.filter(user=self).count())
         result = []
@@ -22,13 +26,6 @@ class User(AbstractUser):
         test.save()
         return test.num, result
 
-    def progress(self):
-        done_quests = len(QuestionUser.objects.filter(done=2))
-        progr = int(done_quests/len(Question.objects.all())) * 100
-        return progr
-
-    def all_user_tests(self):
-        return list(Test.objects.filter(user=self).order_by('-id'))
 
 class Question(models.Model):
     class Meta:
@@ -39,11 +36,16 @@ class Question(models.Model):
     text = models.TextField(verbose_name="Текст вопроса")
 
     def save(self, *args, **kwargs):
+        """
+        Сохраняя вопрос, создаем у каждого пользователя строку с указанием на вопрос.
+        Сделано, чтобы знать пройден вопрос или нет
+        """
         super(Question, self).save(*args, **kwargs)
         for user in User.objects.all():
             QuestionUser(question=self, user=user).save()
 
     def get_answers(self):
+        """Варианты ответа на вопрос"""
         return tuple(QuestionAnswer.objects.filter(question=self))
 
     def __str__(self):

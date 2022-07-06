@@ -18,10 +18,10 @@ from django.urls import path, include
 import exam_testing.views as views
 
 urlpatterns = [
-    path('', views.headpage),
-    path('non_auth/', views.headpage_non_auth),
+    path('', views.main_page),
     path('admin/', admin.site.urls),
-    path('exam/', include('exam_testing.urls')),
+    path('test/', views.make_test),
+    path('results/', views.test_results),
     path('login/', views.user_login),
     path('logout/', views.user_logout),
     path('register/', views.register),
