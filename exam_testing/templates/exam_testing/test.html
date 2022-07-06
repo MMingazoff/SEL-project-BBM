@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <title>Тест №5</title>
+</head>
+
+<body>
+    <nav class="navbar bg-light">
+        <div class="container-fluid" style="background-color: #4169E1;">
+            <a class="navbar-brand mx-auto" href="/" style="color: white;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="white" class="bi bi-book-half"
+                    viewBox="0 1 16 16">
+                    <path
+                        d="M8.5 2.687c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492V2.687zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783z" />
+                </svg>
+                BBM
+            </a>
+            <a class="navbar-brand mx-auto" href="#" style="color: white;">Войти</a>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="row" style="height:55px;margin-left: 48%;margin-top: 1%;">
+            <h3>Тест №5</h3>
+        </div>
+
+        <div class="row">
+            <div class="col-3" style="text-align: left;">
+
+                <div id="list-example" class="list-group" style="width:18%;position: fixed;">
+                    <a class="list-group-item list-group-item-action" href="#list-item-1">Вопрос 1</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-2">Вопрос 2</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-3">Вопрос 3</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-4">Вопрос 4</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-5">Вопрос 5</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-6">Вопрос 6</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-7">Вопрос 7</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-8">Вопрос 8</a>
+                    <a class="list-group-item list-group-item-action" href="#list-item-9">Вопрос 9</a>
+                </div>
+            </div>
+
+            <div class="col">
+                <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true"
+                    class="scrollspy-example" tabindex="0">
+                    <form method="GET" action="" id="myform"></form>
+                        <ul>
+                            {% for question in questions %}
+                                <div id="list-item-1" class="card" style="width: 90%;margin-bottom: 8px;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Вопрос <td>{{ forloop.counter }}</td></h5>
+                                        <p class="card-text">{{question.text}}</p>
+                                        {%for answers in list_of_answer%}
+                                            {%for answer in answers%}
+
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
+                                                        name="q_" value="ans_id_">
+                                                    <label class="form-check-label" for="flexCheckDefault">
+                                                        {{answer.text}}
+                                                    </label>
+                                                </div>
+                                                {%endfor%}
+                                        {%endfor%}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </ul>
+                    <input style="margin-left: 38%;margin-top: 2%;margin-bottom: 8%;width: 15%;" type="submit"
+                        value="Отправить" form="myform" class="btn btn-primary">
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+</body>
+
+</html>
