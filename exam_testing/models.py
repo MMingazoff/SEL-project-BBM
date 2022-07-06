@@ -28,7 +28,7 @@ class User(AbstractUser):
         return progr
 
     def all_user_tests(self):
-        return list(Test.objects.filter(user=self).ordered_by('-id'))
+        return list(Test.objects.filter(user=self).order_by('-id'))
 
 class Question(models.Model):
     class Meta:
