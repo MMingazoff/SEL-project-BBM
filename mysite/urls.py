@@ -19,6 +19,7 @@ import exam_testing.views as views
 
 urlpatterns = [
     path('', views.headpage),
+    path('non_auth/', views.headpage_non_auth),
     path('admin/', admin.site.urls),
     path('exam/', include('exam_testing.urls')),
     path('login/', views.user_login),

@@ -22,10 +22,12 @@ def test_results(request):
     return HttpResponse('Test results')
 
 
-def headpage(request):
-    if not request.user.is_authenticated:
-        return render(request, templates_path+'headpage_anon.html')
+def headpage_non_auth(request):
+    return render(request, templates_path + 'headpage_anon.html')
 
+
+@login_required(login_url='non_auth/')
+def headpage(request):
     username = request.user.username
     last_tests = Test.get_last_tests()
     self_progr = request.user.progress()
