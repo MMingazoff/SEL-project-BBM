@@ -10,7 +10,7 @@ def main_page(request):
 
 
 def test_results(request):
-    return HttpResponse('Test results')                                            'request': request})
+    return HttpResponse('Test results')
 
 
 def make_test(request):
