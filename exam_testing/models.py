@@ -59,8 +59,8 @@ class QuestionUser(models.Model):
 
 
 class QuestionAnswer(models.Model):  # ответ на каждый чекбокс
-    text = models.TextField(verbose_name='Текст варианта ответа')
-    correct = models.BooleanField(verbose_name='Правильный ответ?')
+    text = models.TextField()
+    correct = models.BooleanField()
     question = models.ForeignKey("Question", on_delete=models.CASCADE)
 
     def __str__(self):

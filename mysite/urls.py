@@ -21,6 +21,7 @@ urlpatterns = [
     path('', views.headpage),
     path('admin/', admin.site.urls),
     path('exam/', include('exam_testing.urls')),
+    path('test/',views.test),
     path('login/', views.user_login),
     path('logout/', views.user_logout),
     path('register/', views.register),
