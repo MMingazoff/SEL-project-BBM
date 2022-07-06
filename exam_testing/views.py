@@ -15,7 +15,8 @@ def test_results(request):
 
 
 def headpage_non_auth(request):
-    return render(request, 'exam_testing/headpage_anon.html')
+    last_tests = Test.get_last_tests()
+    return render(request, 'exam_testing/headpage_anon.html', context={'last_tests': last_tests})
 
 
 @login_required(login_url='non_auth/')

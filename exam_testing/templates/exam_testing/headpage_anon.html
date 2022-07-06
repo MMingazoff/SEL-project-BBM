@@ -39,13 +39,13 @@
             <div data-bs-spy="scroll" style="overflow: auto;width: 75%; height: 450px;" data-bs-target="#navbar-example2"
                  data-bs-root-margin="0px 0px -40%" data-bs-smooth-scroll="true" class="scrollspy-example" tabindex="0">
 
-                {% for elem in list_elems %}
+                {% for test in last_tests %}
 
                     <div class="card" style="width: 18rem;">
                         <div class="card-body">
-                            <h6 class="card-subtitle mb-1 text-muted"><b>{{ elem.0 }}</b> - попытка №{{elem.1}}: {{ elem.2 }}/{{ elem.3 }}</h6>
-                            <p class="card-text">Прогресс {{ elem.4 }}%<br>
-                                {{elem.5.day}}.{{elem.5.month}}.{{elem.5.year}} {{elem.5.hour}}:{{elem.5.minute}}
+                            <h6 class="card-subtitle mb-1 text-muted"><b>{{ test.user.username }}</b> - попытка №{{test.num}}: {{ test.count_of_done }}/{{ test.questions_count }}</h6>
+                            <p class="card-text">Прогресс {{ test.user.progress }}%<br>
+                                {{test.finish_date.day}}.{{test.finish_date.month}}.{{test.finish_date.year}} {{test.finish_date.hour}}:{{test.finish_date.minute}}
                             </p>
                         </div>
                     </div>
