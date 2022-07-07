@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
-    <title>Тест {{ test_num }}</title>
+    <title>Тест {{ test.num }}</title>
 </head>
 
 <body>
@@ -35,7 +35,7 @@
 
 <div class="container">
     <div class="row" style="height:55px;margin-left: 48%;margin-top: 1%;">
-        <h3>Тест {{ test_num }}</h3>
+        <h3>Тест {{ test.num }}</h3>
     </div>
     <div class="row">
         <div class="col-3" style="text-align: left;">
@@ -55,26 +55,28 @@
         <div class="col">
             <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true"
                  class="scrollspy-example" tabindex="0">
-                <form method="POST" action="/" id="myform">{% csrf_token %}</form>
+                <form method="POST" action="/test/" id="myform">{% csrf_token %}
                 {% for num, question, question_answers in test_questions %}
-                    <div id="list-item-{{ num }}" class="card" style="width: 90%;margin-bottom: 8px;">
-                        <div class="card-body">
-                            <h5 class="card-title">Вопрос {{ num }}</h5>
-                            <p class="card-text">{{ question.text }}</p>
-                            {% for question_answer in question_answers %}
-                                <div class="form-check mb-{% if num != 9 %}1{% else %}2{% endif %}">
-                                    <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
-                                           name="q_{{ num }}" value="ans_id_{{ num }}">
-                                    <label class="form-check-label" for="flexCheckDefault">
-                                        {{  question_answer.text }}
-                                    </label>
-                                </div>
-                            {% endfor %}
+                    <input type = "hidden" name = "test_id" value = "{{test.id}}">
+                        <div id="list-item-{{ num }}" class="card" style="width: 90%;margin-bottom: 8px;">
+                            <div class="card-body">
+                                <h5 class="card-title">Вопрос {{ num }}</h5>
+                                <p class="card-text">{{ question.text }}</p>
+                                {% for question_answer in question_answers %}
+                                    <div class="form-check mb-{% if num != 9 %}1{% else %}2{% endif %}">
+                                        <input class="form-check-input" type="checkbox" id="flexCheckDefault" form="myform"
+                                            name="q_{{ question.id }}[]" value="ans_id_{{ question_answer.id }}">
+                                        <label class="form-check-label" for="flexCheckDefault">
+                                            {{  question_answer.text }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
                 {% endfor %}
                 <input style="margin-left: 38%;margin-top: 2%;margin-bottom: 8%;width: 15%;" type="submit"
                        value="Отправить" form="myform" class="btn btn-primary">
+                </form>
             </div>
         </div>
     </div>

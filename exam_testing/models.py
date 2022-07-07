@@ -24,7 +24,7 @@ class User(AbstractUser):
             test.questions.add(question)
             result.append((question, question.get_answers()))
         test.save()
-        return test.num, result
+        return test, result
 
     def progress(self):
         done_quests = len(QuestionUser.objects.filter(done=2))
@@ -85,6 +85,7 @@ class UserAttempt(models.Model):
     question_answer = models.ForeignKey('QuestionAnswer', on_delete=models.CASCADE)
 
 
+
 class Test(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     finish_date = models.DateTimeField(auto_now_add=True)
@@ -106,4 +107,15 @@ class Test(models.Model):
 
     def questions_count(self):
         return len(self.questions.all())
+
+
+
+def set_data(request):
+    for question_id in request.POST:
+        if question_id.startswith("q_"):
+            for answer_id in request.POST.getlist(question_id):
+                UserAttempt(test = Test.objects.get(id = int(request.POST.get("test_id"))),
+                            question = Question.objects.get(id = int(question_id[2:-2])),
+                            question_answer = QuestionAnswer.objects.get(id = int(answer_id[7:]))
+                            ).save()
 
