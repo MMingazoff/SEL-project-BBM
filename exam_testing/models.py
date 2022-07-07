@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -16,6 +15,12 @@ class User(AbstractUser):
         Генерация 9 случайных вопросов.
         :return: номер теста, список кортежей с вопросом и кортежом вариантов ответов на вопрос
         """
+
+        # Если пользователь сгенерировал себе тест, но еще не прошел его, то новый тест генерироваться не должен
+        last_test = Test.objects.filter(user=self).order_by('-start_date').first()
+        if last_test and self._is_unsubmitted_test(last_test):
+            return self._get_unsubmitted_test_questions(last_test)
+
         incorrect = QuestionUser.objects.filter(user=self, done=0)
         half_correct = QuestionUser.objects.filter(user=self, done=1)
         correct = QuestionUser.objects.filter(user=self, done=2)
@@ -34,6 +39,19 @@ class User(AbstractUser):
             test.questions.add(question)
             result.append((question, question.get_answers()))
         test.save()
+        return test, result
+
+    @staticmethod
+    def _is_unsubmitted_test(test):
+        """Проверка на то, есть ли не пройденный тест"""
+        return not UserAttempt.objects.filter(test=test).exists()
+
+    @staticmethod
+    def _get_unsubmitted_test_questions(test):
+        """Получить вопросы с не пройденного теста"""
+        result = []
+        for question in test.questions.all():
+            result.append((question, question.get_answers()))
         return test, result
 
     @staticmethod
@@ -64,9 +82,10 @@ class User(AbstractUser):
             else:  # частичные и неверные закончились, значит берем верные
                 correct_left -= 1
                 correct_num += 1
-        if correct_left > 0:
+        # слот потенциально на верный
+        if correct_left > 0: # есть верный, берем
             correct_num += 1
-        elif incorrect_left > 0:  # есть неверные, значит берем
+        elif incorrect_left > 0:  # нет верного, но есть неверные, значит берем
             incorrect_num += 1
         elif half_correct_left > 0:  # неверные закончились, значит берем частичные
             half_correct_num += 1
@@ -125,22 +144,21 @@ class UserAttempt(models.Model):
     test = models.ForeignKey('Test', on_delete=models.CASCADE)
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
     question_answer = models.ForeignKey('QuestionAnswer', on_delete=models.CASCADE)
-    
-    
+
 
 class Test(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    finish_date = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateTimeField(auto_now_add=True)
     num = models.IntegerField()
     questions = models.ManyToManyField(Question)
 
 
 def set_data(request):
-    for question_id in request.POST: 
+    """Фиксирует попытку/ответ пользователя на тест в базе данных"""
+    for question_id in request.POST:
         if question_id.startswith("q_"):
             for answer_id in request.POST.getlist(question_id):
-                UserAttempt(test = Test.objects.get(id = int(request.POST.get("test_id"))),
-                            question = Question.objects.get(id = int(question_id[2:-2])),
-                            question_answer = QuestionAnswer.objects.get(id = int(answer_id[7:]))
+                UserAttempt(test=Test.objects.get(id=int(request.POST.get("test_id"))),
+                            question=Question.objects.get(id=int(question_id[2:-2])),
+                            question_answer=QuestionAnswer.objects.get(id=int(answer_id[7:]))
                             ).save()
-    
