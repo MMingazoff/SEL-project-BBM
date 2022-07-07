@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import login, logout
-from .models import User, Test, QuestionAnswer, Question, UserAttempt
+from .models import User
 
 
 def main_page(request):
@@ -15,6 +15,8 @@ def test_results(request):
 
 def make_test(request):
     """Рендер страницы с тестом"""
+    if request.method == 'POST':
+        return redirect('/')
     test_num, test_questions = User.generate_test_questions(request.user)
     test_questions = list(enumerate(test_questions, 1))
     test_questions = [(num, question, question_answers) for num, (question, question_answers) in test_questions]
@@ -34,8 +36,9 @@ def register(request):
                                             password=request.POST.get('password'),
                                             secret_question=request.POST.get('secret_question'),
                                             secret_question_answer=make_password(
-                                                request.POST.get('secret_question_answer'))
+                                                request.POST.get('secret_question_answer').strip().lower())
                                             )
+            user.on_register()
         else:
             return render(request, 'exam_testing/register.html', {'error': 'Такое имя пользователя занято'})
         user.save()
@@ -76,7 +79,7 @@ def recover_password(request):
             return render(request, 'exam_testing/password_recovery_startpage.html')
     if request.method == 'POST':
         user = User.objects.get(username=request.POST.get('login'))
-        if check_password(request.POST.get('secret_question_answer'), user.secret_question_answer):
+        if check_password(request.POST.get('secret_question_answer').strip().lower(), user.secret_question_answer):
             if request.POST.get('password') != request.POST.get('password_two'):
                 return render(request, 'exam_testing/password_recovery.html',
                               {'secret_question': user.secret_question,
