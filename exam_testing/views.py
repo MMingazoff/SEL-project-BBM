@@ -1,16 +1,16 @@
-import re
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import login, logout
-from .models import User, Test, QuestionAnswer, Question, UserAttempt,set_data
+from django.contrib.auth.decorators import login_required
+from .models import User, Test, set_data
 
 
 def main_page(request):
     return HttpResponse('Main page')
 
 
+@login_required
 def test_results(request):
     return HttpResponse('Test results')
 
@@ -26,20 +26,19 @@ def headpage(request):
     return render(request, 'exam_testing/headpage.html', context={'username': username, 'last_tests': last_tests,
                                                                     'self_progr': self_progr, 'user_tests': user_tests})
 
-
+@login_required
 def make_test(request):
     """Рендер страницы с тестом"""
     if request.method == "POST":
         set_data(request)
         return redirect('/result/')
-
-    test, test_questions = User.generate_test_questions(request.user)
-    test_questions = list(enumerate(test_questions, 1))
-    test_questions = [(num, question, question_answers) for num, (question, question_answers) in test_questions]
-    return render(request, 'exam_testing/test.html', {'test_questions': test_questions,
-                                                      'test': test,
-                                                      })
-
+    if request.method == "GET":
+        test, test_questions = User.generate_test_questions(request.user)
+        test_questions = list(enumerate(test_questions, 1))
+        test_questions = [(num, question, question_answers) for num, (question, question_answers) in test_questions]
+        return render(request, 'exam_testing/test.html', {'test_questions': test_questions,
+                                                          'test': test,
+                                                          })
 
 
 def register(request):
@@ -53,11 +52,12 @@ def register(request):
                                             password=request.POST.get('password'),
                                             secret_question=request.POST.get('secret_question'),
                                             secret_question_answer=make_password(
-                                                request.POST.get('secret_question_answer'))
+                                                request.POST.get('secret_question_answer').strip().lower())
                                             )
+            user.on_register()
+            user.save()
         else:
             return render(request, 'exam_testing/register.html', {'error': 'Такое имя пользователя занято'})
-        user.save()
         return redirect('/login/')
 
 
@@ -95,7 +95,7 @@ def recover_password(request):
             return render(request, 'exam_testing/password_recovery_startpage.html')
     if request.method == 'POST':
         user = User.objects.get(username=request.POST.get('login'))
-        if check_password(request.POST.get('secret_question_answer'), user.secret_question_answer):
+        if check_password(request.POST.get('secret_question_answer').strip().lower(), user.secret_question_answer):
             if request.POST.get('password') != request.POST.get('password_two'):
                 return render(request, 'exam_testing/password_recovery.html',
                               {'secret_question': user.secret_question,
