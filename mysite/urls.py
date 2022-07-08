@@ -18,7 +18,7 @@ from django.urls import path, include
 import exam_testing.views as views
 
 urlpatterns = [
-    path('', views.main_page),
+    path('', views.headpage),
     path('admin/', admin.site.urls),
     path('test/', views.make_test),
     path('results/', views.test_results),

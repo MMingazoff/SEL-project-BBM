@@ -102,6 +102,14 @@ class User(AbstractUser):
         """Создает вопросы при регистрации пользователя (для проверки степени пройденности)"""
         QuestionUser.objects.bulk_create([QuestionUser(question=question, user=self) for question in Question.objects.all()])
 
+    def progress(self):
+        done_quests = len(QuestionUser.objects.filter(done=2))
+        progr = int(done_quests/len(Question.objects.all())) * 100
+        return progr
+
+    def all_user_tests(self):
+        return list(Test.objects.filter(user=self).order_by('-id'))
+
 
 class Question(models.Model):
     class Meta:
@@ -135,8 +143,8 @@ class QuestionUser(models.Model):
 
 
 class QuestionAnswer(models.Model):  # ответ на каждый чекбокс
-    text = models.TextField()
-    correct = models.BooleanField()
+    text = models.TextField(verbose_name='Текст варианта ответа')
+    correct = models.BooleanField(verbose_name='Правильный ответ?')
     question = models.ForeignKey("Question", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -158,6 +166,22 @@ class Test(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     num = models.IntegerField()
     questions = models.ManyToManyField(Question)
+
+    @classmethod
+    def get_last_tests(cls, count=15):
+        return list(Test.objects.order_by('-finish_date')[:count])
+
+    def count_of_done(self):
+        cnt = 0
+        for quest in self.questions.all():
+            first = set(QuestionAnswer.objects.filter(question=quest, correct=True))
+            second = set(map(lambda x: x.question_answer, UserAttempt.objects.filter(test=self, question=quest)))
+            if len(first ^ second) == 0:
+                cnt += 1
+        return cnt
+
+    def questions_count(self):
+        return len(self.questions.all())
 
 
 def set_data(request):

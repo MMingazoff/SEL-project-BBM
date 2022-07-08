@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from .models import User, set_data
+from .models import User, Test, set_data
 
 
 def main_page(request):
@@ -14,6 +14,17 @@ def main_page(request):
 def test_results(request):
     return HttpResponse('Test results')
 
+
+def headpage(request):
+    last_tests = Test.get_last_tests()
+    if request.user.is_anonymous:
+        return render(request, 'exam_testing/headpage_anon.html', context={'last_tests': last_tests})
+    username = request.user.username
+    self_progr = request.user.progress()
+    user_tests = request.user.all_user_tests()
+
+    return render(request, 'exam_testing/headpage.html', context={'username': username, 'last_tests': last_tests,
+                                                                    'self_progr': self_progr, 'user_tests': user_tests})
 
 @login_required
 def make_test(request):
