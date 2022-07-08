@@ -15,15 +15,11 @@ def test_results(request):
     return HttpResponse('Test results')
 
 
-def headpage_non_auth(request):
-    last_tests = Test.get_last_tests()
-    return render(request, 'exam_testing/headpage_anon.html', context={'last_tests': last_tests})
-
-
-@login_required(login_url='non_auth/')
 def headpage(request):
-    username = request.user.username
     last_tests = Test.get_last_tests()
+    if request.user.is_anonymous:
+        return render(request, 'exam_testing/headpage_anon.html', context={'last_tests': last_tests})
+    username = request.user.username
     self_progr = request.user.progress()
     user_tests = request.user.all_user_tests()
 
