@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from itertools import chain
 from random import shuffle
 from typing import Tuple
+from random import random
 
 
 class User(AbstractUser):
@@ -83,8 +84,14 @@ class User(AbstractUser):
                 correct_left -= 1
                 correct_num += 1
         # слот потенциально на верный
-        if correct_left > 0: # есть верный, берем
-            correct_num += 1
+        if correct_left > 0:  # есть верный, берем
+            if incorrect_left > 0:  # если есть неверный, то с вероятностью 45% он будет на последнем слоте
+                if random() >= 0.55:
+                    correct_num += 1
+                else:
+                    incorrect_num += 1
+            else:  # неверного нет, значит просто берем верный
+                correct_num += 1
         elif incorrect_left > 0:  # нет верного, но есть неверные, значит берем
             incorrect_num += 1
         elif half_correct_left > 0:  # неверные закончились, значит берем частичные
