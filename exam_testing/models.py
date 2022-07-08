@@ -155,7 +155,6 @@ class UserAttempt(models.Model):
     class Meta:
         verbose_name = 'Пройденный тест'
         verbose_name_plural = 'Пройденные тесты'
-
     test = models.ForeignKey('Test', on_delete=models.CASCADE)
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
     question_answer = models.ForeignKey('QuestionAnswer', on_delete=models.CASCADE)
