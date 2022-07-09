@@ -56,8 +56,8 @@
             <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-smooth-scroll="true"
                  class="scrollspy-example" tabindex="0">
                 <form method="POST" action="/test/" id="myform">{% csrf_token %}
-                {% for num, question, question_answers in test_questions %}
                     <input type = "hidden" name = "test_id" value = "{{test.id}}">
+                {% for num, question, question_answers in test_questions %}
                         <div id="list-item-{{ num }}" class="card" style="width: 90%;margin-bottom: 8px;">
                             <div class="card-body">
                                 <h5 class="card-title">Вопрос {{ num }}</h5>

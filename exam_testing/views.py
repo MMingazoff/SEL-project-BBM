@@ -37,7 +37,8 @@ def make_test(request):
     """Рендер страницы с тестом"""
     if request.method == "POST":
         set_data(request)
-        return redirect('/result/')
+        test_id = request.POST.get('test_id')
+        return redirect(f'/result/{test_id}/')
     if request.method == "GET":
         test, test_questions = User.generate_test_questions(request.user)
         test_questions = list(enumerate(test_questions, 1))
