@@ -2,9 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from itertools import chain
-from random import shuffle
+from random import random, Random, randint
 from typing import Tuple
-from random import random
 
 
 class User(AbstractUser):
@@ -32,12 +31,15 @@ class User(AbstractUser):
                                half_correct.order_by('?')[:half_correct_num],  # частичные
                                correct.order_by('?')[:correct_num],  # верные
                                ))
-        shuffle(questions)
-        test = Test.objects.create(user=self, num=Test.objects.filter(user=self).count())
+        seed = randint(0, 1000)
+        test = Test.objects.create(user=self, num=Test.objects.filter(user=self).count() + 1, seed=seed)
         result = []
         for question_user in questions:
             question = question_user.question
             test.questions.add(question)
+        questions = list(test.questions.all())
+        Random(seed).shuffle(questions)
+        for question in questions:
             result.append((question, question.get_answers()))
         test.save()
         return test, result
@@ -103,12 +105,12 @@ class User(AbstractUser):
         QuestionUser.objects.bulk_create([QuestionUser(question=question, user=self) for question in Question.objects.all()])
 
     def progress(self):
-        done_quests = len(QuestionUser.objects.filter(done=2))
-        progr = int(done_quests/len(Question.objects.all())) * 100
+        done_quests = QuestionUser.objects.filter(user=self, done=2).count()
+        progr = int((done_quests / Question.objects.count()) * 100)
         return progr
 
     def all_user_tests(self):
-        return list(Test.objects.filter(user=self).order_by('-id'))
+        return list(Test.objects.filter(user=self).order_by('-start_date'))
 
 
 class Question(models.Model):
@@ -136,7 +138,7 @@ class Question(models.Model):
         cnt = 0
         count_of_correct = QuestionAnswer.objects.filter(question=self, correct=True).count()
         if count_of_correct == 0:
-            return 'Неверно'
+            return 0
         user_answers = list(
             map(lambda x: x.question_answer,
                 UserAttempt.objects.filter(test=test, question=self)))
@@ -149,11 +151,11 @@ class Question(models.Model):
                 cnt += 1
         res = cnt / count_of_correct
         if res == 1:
-            return "Верно"
+            return 2  # верно
         elif res >= 0.5:
-            return "Частично верно"
+            return 1  # частично верно
         elif res < 0.5:
-            return "Неверно"
+            return 0  # верно
 
     def __str__(self):
         return self.title
@@ -188,6 +190,8 @@ class Test(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     num = models.IntegerField()
     questions = models.ManyToManyField(Question)
+    seed = models.IntegerField()
+    progress = models.IntegerField(default=0)
 
     @classmethod
     def get_last_tests(cls, count=15):
@@ -202,13 +206,35 @@ class Test(models.Model):
                 cnt += 1
         return cnt
 
+    def get_results(self) -> list:
+        if User.is_unsubmitted_test(self):
+            return []
+        result = list()
+        questions = list(self.questions.all())
+        Random(self.seed).shuffle(questions)
+        for num, question in enumerate(questions, 1):
+            result.append((num, question.text, question.correct_answers(self)))
+        return result
+
+    def set_results(self):
+        """Изменяет степень пройденности в зависимости от результата"""
+        for question in self.questions.all():
+            qu = QuestionUser.objects.get(user=self.user, question=question)
+            qu.done = question.correct_answers(self)
+            qu.save()
+        self.progress = int((QuestionUser.objects.filter(user=self.user, done=2).count()
+                             / Question.objects.count()) * 100)
+        self.save()
+
 
 def set_data(request):
     """Фиксирует попытку/ответ пользователя на тест в базе данных"""
+    test = Test.objects.get(id=int(request.POST.get("test_id")))
     for question_id in request.POST:
         if question_id.startswith("q_"):
             for answer_id in request.POST.getlist(question_id):
-                UserAttempt(test=Test.objects.get(id=int(request.POST.get("test_id"))),
+                UserAttempt(test=test,
                             question=Question.objects.get(id=int(question_id[2:-2])),
                             question_answer=QuestionAnswer.objects.get(id=int(answer_id[7:]))
                             ).save()
+    test.set_results()
