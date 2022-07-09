@@ -45,144 +45,26 @@
                 <a class="list-group-item list-group-item-action" href="#list-item-9">Вопрос 9</a>
             </div>
         </div>
-
         <div class="col">
             <div data-bs-spy="scroll" data-bs-target="#list-example" data-bs-offset="0" class="scrollspy-example" tabindex="0">
-                <div id="list-item-1" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 1</h4>
-                        <p class="card-text">
-                            {{question1}}
-                        </p>
-
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-
+                {% for question_num, question_text, question_result in questions %}
+                    <div id="list-item-{{ question_num }}" class="card" style="width: 90%;margin-bottom: 8px;">
+                        <div class="card-body">
+                            <h4 class="card-title">Вопрос {{ question_num }}</h4>
+                            <p class="card-text">
+                                {{question_text}}
+                            </p>
+                            {% if question_result == "Верно"%}
+                            <button type="button" class="btn btn-success" disabled >{{question_result}}</button>
+                            {% elif question_result == "Частично верно"%}
+                            <button type="button" class="btn btn-warning" disabled >{{question_result}}</button>
+                            {% elif question_result == "Неверно"%}
+                            <button type="button" class="btn btn-danger" disabled >{{question_result}}</button>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-2" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 2</h4>
-                        <p class="card-text">
-                            {{question2}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-3" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 3</h4>
-                        <p class="card-text">
-                            {{question3}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-4" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 4</h4>
-                        <p class="card-text">
-                            {{question4}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-5" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 5</h4>
-                        <p class="card-text">
-                            {{question5}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-6" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 6</h4>
-                        <p class="card-text">
-                            {{question6}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-7" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 7</h4>
-                        <p class="card-text">
-                            {{question7}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-8" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 8</h4>
-                        <p class="card-text">
-                            {{question8}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <br>
-                <br>
-                <br>
-                <div id="list-item-9" class="card" style="width: 90%;margin-bottom: 8px;">
-                    <div class="card-body">
-                        <h4 class="card-title">Вопрос 9</h4>
-                        <p class="card-text">
-                            {{question9}}
-                        </p>
-
-
-                        <button type="button" class="btn btn-success" disabled >верно</button>
-
-                    </div>
-                </div>
-                <input style="margin-left: 38%;margin-top: 2%;margin-bottom: 8%;" type="submit" value="вернуться в меню" form="myform" class="btn btn-primary">
+                {% endfor %}
+                <input style="margin-left: 38%;margin-top: 2%;margin-bottom: 8%;" type="submit" value="Вернуться в меню" form="myform" class="btn btn-primary">
             </div>
         </div>
     </div>

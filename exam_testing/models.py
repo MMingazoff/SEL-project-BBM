@@ -132,6 +132,28 @@ class Question(models.Model):
         """Варианты ответа на вопрос"""
         return tuple(QuestionAnswer.objects.filter(question=self))
 
+    def correct_answers(self, test):
+        cnt = 0
+        count_of_correct = QuestionAnswer.objects.filter(question=self, correct=True).count()
+        # last_test = Test.objects.filter(questions__in=self.question).order_by('-start_date').first()
+        user_answers = list(
+            map(lambda x: x.question_answer,
+                UserAttempt.objects.filter(test=test, question=self)))
+        for answer in QuestionAnswer.objects.filter(question=self):
+            if answer.correct and answer in user_answers:
+                cnt += 1
+            elif answer.correct and answer not in user_answers:
+                cnt -= 1
+            elif not answer.correct and answer in user_answers:
+                cnt += 1
+        res = cnt / count_of_correct
+        if res == 1:
+            return "верно"
+        elif res >= 0.5:
+            return "частично"
+        elif res < 0.5:
+            return "неверно"
+
     def __str__(self):
         return self.title
 
@@ -179,8 +201,13 @@ class Test(models.Model):
                 cnt += 1
         return cnt
 
-    def questions_count(self):
-        return len(self.questions.all())
+    def get_results(self) -> list:
+        if User._is_unsubmitted_test(self):
+            return []
+        result = list()
+        for num, question in enumerate(self.questions.all()):
+            result.append((num, question.text, question.correct_answers(self)))
+        return result
 
 
 def set_data(request):

@@ -12,7 +12,12 @@ def main_page(request):
 
 @login_required
 def test_results(request):
-    return HttpResponse('Test results')
+    test = Test.objects.get(id=request.GET.get('test_id'))
+    test_result = test.get_results()
+    if test_result:
+        return render(request, "exam_testing/results.html", context={"questions": test_result})
+    else:
+        return redirect("/")
 
 
 def headpage(request):
