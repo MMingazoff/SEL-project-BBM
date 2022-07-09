@@ -19,8 +19,8 @@ class User(AbstractUser):
 
         # Если пользователь сгенерировал себе тест, но еще не прошел его, то новый тест генерироваться не должен
         last_test = Test.objects.filter(user=self).order_by('-start_date').first()
-        if last_test and self._is_unsubmitted_test(last_test):
-            return self._get_unsubmitted_test_questions(last_test)
+        if last_test and self.is_unsubmitted_test(last_test):
+            return self.get_unsubmitted_test_questions(last_test)
 
         incorrect = QuestionUser.objects.filter(user=self, done=0)
         half_correct = QuestionUser.objects.filter(user=self, done=1)
@@ -43,12 +43,12 @@ class User(AbstractUser):
         return test, result
 
     @staticmethod
-    def _is_unsubmitted_test(test):
+    def is_unsubmitted_test(test):
         """Проверка на то, есть ли не пройденный тест"""
         return not UserAttempt.objects.filter(test=test).exists()
 
     @staticmethod
-    def _get_unsubmitted_test_questions(test):
+    def get_unsubmitted_test_questions(test):
         """Получить вопросы с не пройденного теста"""
         result = []
         for question in test.questions.all():
@@ -132,6 +132,29 @@ class Question(models.Model):
         """Варианты ответа на вопрос"""
         return tuple(QuestionAnswer.objects.filter(question=self))
 
+    def correct_answers(self, test):
+        cnt = 0
+        count_of_correct = QuestionAnswer.objects.filter(question=self, correct=True).count()
+        if count_of_correct == 0:
+            return 'Неверно'
+        user_answers = list(
+            map(lambda x: x.question_answer,
+                UserAttempt.objects.filter(test=test, question=self)))
+        for answer in QuestionAnswer.objects.filter(question=self):
+            if answer.correct and answer in user_answers:
+                cnt += 1
+            elif answer.correct and answer not in user_answers:
+                cnt -= 1
+            elif not answer.correct and answer in user_answers:
+                cnt += 1
+        res = cnt / count_of_correct
+        if res == 1:
+            return "Верно"
+        elif res >= 0.5:
+            return "Частично верно"
+        elif res < 0.5:
+            return "Неверно"
+
     def __str__(self):
         return self.title
 
@@ -168,7 +191,7 @@ class Test(models.Model):
 
     @classmethod
     def get_last_tests(cls, count=15):
-        return list(Test.objects.order_by('-finish_date')[:count])
+        return list(Test.objects.order_by('-start_date')[:count])
 
     def count_of_done(self):
         cnt = 0
@@ -178,9 +201,6 @@ class Test(models.Model):
             if len(first ^ second) == 0:
                 cnt += 1
         return cnt
-
-    def questions_count(self):
-        return len(self.questions.all())
 
 
 def set_data(request):
