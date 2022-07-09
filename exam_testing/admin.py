@@ -31,6 +31,4 @@ class QuestionAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Question, QuestionAdmin)
-admin.site.register(UserAttempt)
-admin.site.register(QuestionUser)
 admin.site.unregister(Group)

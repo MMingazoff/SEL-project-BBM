@@ -190,7 +190,7 @@ class Test(models.Model):
 
     @classmethod
     def get_last_tests(cls, count=15):
-        return list(Test.objects.order_by('-finish_date')[:count])
+        return list(Test.objects.order_by('-start_date')[:count])
 
     def count_of_done(self):
         cnt = 0
