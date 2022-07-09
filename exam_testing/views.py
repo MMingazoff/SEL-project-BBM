@@ -24,7 +24,8 @@ def headpage(request):
     user_tests = request.user.all_user_tests()
 
     return render(request, 'exam_testing/headpage.html', context={'username': username, 'last_tests': last_tests,
-                                                                    'self_progr': self_progr, 'user_tests': user_tests})
+                                                                  'self_progr': self_progr, 'user_tests': user_tests})
+
 
 @login_required
 def make_test(request):

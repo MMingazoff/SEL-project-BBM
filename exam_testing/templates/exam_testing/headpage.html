@@ -52,7 +52,7 @@
                         <div class="card-body">
                             <h6 class="card-subtitle mb-1 text-muted"><b>{{ test.user.username }}</b> - попытка №{{test.num}}: {{ test.count_of_done }}/{{ test.questions_count }}</h6>
                             <p class="card-text">Прогресс {{ test.user.progress }}%<br>
-                                {{test.finish_date.day}}.{{test.finish_date.month}}.{{test.finish_date.year}} {{test.finish_date.hour}}:{{test.finish_date.minute}}
+                                {{test.start_date.day}}.{{test.start_date.month}}.{{test.start_date.year}} {{test.start_date.hour}}:{{test.start_date.minute}}
                             </p>
                         </div>
                     </div>
@@ -101,7 +101,7 @@
                         <div class="card-body">
 
                             <h6 class="card-subtitle mb-1 text-muted">Тест №{{ test.num }}: {{ test.count_of_done }}/{{ test.questions_count }}</h6>
-                            <p class="card-text">{{ test.finish_date.day }}.{{ test.finish_date.month }}.{{ test.finish_date.year }} {{ test.finish_date.hour }}:{{ test.finish_date.minute }}</p>
+                            <p class="card-text">{{ test.start_date.day }}.{{ test.start_date.month }}.{{ test.start_date.year }} {{ test.start_date.hour }}:{{ test.start_date.minute }}</p>
                             <a href="#" class="card-link">Подробнее</a>
                         </div>
                     </div>
