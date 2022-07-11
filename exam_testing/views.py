@@ -15,13 +15,13 @@ def test_results(request, test_id):
     test = Test.objects.get(id=test_id)
     if test.user != request.user:
         return redirect("/")
-    test_result = test.get_results()
+    test_result = test.get_results(request.user)
     if test_result:
         return render(request, "exam_testing/results.html", context={"questions": test_result,
                                                                      "test_num": test.num,
                                                                      })
     else:
-        return redirect("/")
+        return redirect("/test/")
 
 
 def headpage(request):

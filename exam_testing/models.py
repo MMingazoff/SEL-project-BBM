@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from itertools import chain
-from random import random, Random, randint
+from random import random, Random, randint, shuffle
 from typing import Tuple
 
 
@@ -17,13 +17,14 @@ class User(AbstractUser):
         """
 
         # Если пользователь сгенерировал себе тест, но еще не прошел его, то новый тест генерироваться не должен
-        last_test = Test.objects.filter(user=self).order_by('-start_date').first()
-        if last_test and self.is_unsubmitted_test(last_test):
-            return self.get_unsubmitted_test_questions(last_test)
+        last_test = Test.objects.filter(user=self, completed=False)
+        if last_test.exists():
+            return last_test.first().get_test_questions()
 
-        incorrect = QuestionUser.objects.filter(user=self, done=0)
-        half_correct = QuestionUser.objects.filter(user=self, done=1)
-        correct = QuestionUser.objects.filter(user=self, done=2)
+        questions_pool = QuestionUser.objects.filter(user=self, question__active=True)
+        incorrect = questions_pool.filter(done=0)
+        half_correct = questions_pool.filter(done=1)
+        correct = questions_pool.filter(done=2)
         incorrect_num, half_correct_num, correct_num = User._calculate_questions_num(incorrect.count(),
                                                                                      half_correct.count(),
                                                                                      correct.count())
@@ -40,22 +41,15 @@ class User(AbstractUser):
         questions = list(test.questions.all())
         Random(seed).shuffle(questions)
         for question in questions:
-            result.append((question, question.get_answers()))
+            question_answers = question.get_answers()
+            shuffle(question_answers)
+            result.append((question, question_answers))
         test.save()
         return test, result
 
-    @staticmethod
-    def is_unsubmitted_test(test):
+    def has_unsubmitted_test(self):
         """Проверка на то, есть ли не пройденный тест"""
-        return not UserAttempt.objects.filter(test=test).exists()
-
-    @staticmethod
-    def get_unsubmitted_test_questions(test):
-        """Получить вопросы с не пройденного теста"""
-        result = []
-        for question in test.questions.all():
-            result.append((question, question.get_answers()))
-        return test, result
+        return Test.objects.filter(user=self, completed=False).exists()
 
     @staticmethod
     def _calculate_questions_num(incorrect: int, half_correct: int, correct: int) -> Tuple[int, int, int]:
@@ -106,11 +100,12 @@ class User(AbstractUser):
 
     def progress(self):
         done_quests = QuestionUser.objects.filter(user=self, done=2).count()
-        progr = int((done_quests / Question.objects.count()) * 100)
+        all_questions = Question.objects.filter(active=True).count() or 1
+        progr = int((done_quests / all_questions) * 100)
         return progr
 
     def all_user_tests(self):
-        return list(Test.objects.filter(user=self).order_by('-start_date'))
+        return list(Test.objects.filter(user=self, completed=True).order_by('-start_date'))
 
 
 class Question(models.Model):
@@ -120,6 +115,7 @@ class Question(models.Model):
 
     title = models.CharField(max_length=100, default='Вопрос', verbose_name='Заголовок')
     text = models.TextField(verbose_name="Текст вопроса")
+    active = models.BooleanField(default=True, verbose_name='Активный')
 
     def save(self, *args, **kwargs):
         """
@@ -127,12 +123,13 @@ class Question(models.Model):
         Сделано, чтобы знать пройден вопрос или нет
         """
         super(Question, self).save(*args, **kwargs)
-        for user in User.objects.all():
-            QuestionUser(question=self, user=user).save()
+        if not QuestionUser.objects.filter(question=self).exists():
+            for user in User.objects.all():
+                QuestionUser(question=self, user=user).save()
 
     def get_answers(self):
         """Варианты ответа на вопрос"""
-        return tuple(QuestionAnswer.objects.filter(question=self))
+        return list(QuestionAnswer.objects.filter(question=self))
 
     def correct_answers(self, test):
         cnt = 0
@@ -148,7 +145,7 @@ class Question(models.Model):
             elif answer.correct and answer not in user_answers:
                 cnt -= 1
             elif not answer.correct and answer in user_answers:
-                cnt += 1
+                cnt -= 1
         res = cnt / count_of_correct
         if res == 1:
             return 2  # верно
@@ -162,12 +159,18 @@ class Question(models.Model):
 
 
 class QuestionUser(models.Model):
+    class Meta:
+        verbose_name = 'Степень пройденности каждого вопроса'
+        verbose_name_plural = 'Степени пройденности каждого вопроса'
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     done = models.IntegerField(default=0)  # 0 - не пройден(неверный), 1 - частично верно, 2 - верно
 
 
 class QuestionAnswer(models.Model):  # ответ на каждый чекбокс
+    class Meta:
+        verbose_name = 'Ответ на вопрос'
+        verbose_name_plural = 'Ответы на вопросы'
     text = models.TextField(verbose_name='Текст варианта ответа')
     correct = models.BooleanField(verbose_name='Правильный ответ?')
     question = models.ForeignKey("Question", on_delete=models.CASCADE)
@@ -186,16 +189,27 @@ class UserAttempt(models.Model):
 
 
 class Test(models.Model):
+    class Meta:
+        verbose_name = 'Тест'
+        verbose_name_plural = 'Тесты'
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     start_date = models.DateTimeField(auto_now_add=True)
     num = models.IntegerField()
     questions = models.ManyToManyField(Question)
     seed = models.IntegerField()
     progress = models.IntegerField(default=0)
+    completed = models.BooleanField(default=False)
 
     @classmethod
     def get_last_tests(cls, count=15):
-        return list(Test.objects.order_by('-start_date')[:count])
+        return list(Test.objects.filter(completed=True).order_by('-start_date')[:count])
+
+    def get_test_questions(self):
+        """Получить вопросы с не пройденного теста"""
+        result = []
+        for question in self.questions.all():
+            result.append((question, question.get_answers()))
+        return self, result
 
     def count_of_done(self):
         cnt = 0
@@ -206,8 +220,8 @@ class Test(models.Model):
                 cnt += 1
         return cnt
 
-    def get_results(self) -> list:
-        if User.is_unsubmitted_test(self):
+    def get_results(self, user) -> list:
+        if user.has_unsubmitted_test():
             return []
         result = list()
         questions = list(self.questions.all())
@@ -222,8 +236,9 @@ class Test(models.Model):
             qu = QuestionUser.objects.get(user=self.user, question=question)
             qu.done = question.correct_answers(self)
             qu.save()
-        self.progress = int((QuestionUser.objects.filter(user=self.user, done=2).count()
+        self.progress = int((QuestionUser.objects.filter(user=self.user, done=2, question__active=True).count()
                              / Question.objects.count()) * 100)
+        self.completed = True
         self.save()
 
 
