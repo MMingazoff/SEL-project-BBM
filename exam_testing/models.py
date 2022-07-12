@@ -2,9 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from itertools import chain
-from random import shuffle
+from random import random, Random, randint, shuffle
 from typing import Tuple
-from random import random
 
 
 class User(AbstractUser):
@@ -18,13 +17,14 @@ class User(AbstractUser):
         """
 
         # Если пользователь сгенерировал себе тест, но еще не прошел его, то новый тест генерироваться не должен
-        last_test = Test.objects.filter(user=self).order_by('-start_date').first()
-        if last_test and self._is_unsubmitted_test(last_test):
-            return self._get_unsubmitted_test_questions(last_test)
+        last_test = Test.objects.filter(user=self, completed=False)
+        if last_test.exists():
+            return last_test.first().get_test_questions()
 
-        incorrect = QuestionUser.objects.filter(user=self, done=0)
-        half_correct = QuestionUser.objects.filter(user=self, done=1)
-        correct = QuestionUser.objects.filter(user=self, done=2)
+        questions_pool = QuestionUser.objects.filter(user=self, question__active=True)
+        incorrect = questions_pool.filter(done=0)
+        half_correct = questions_pool.filter(done=1)
+        correct = questions_pool.filter(done=2)
         incorrect_num, half_correct_num, correct_num = User._calculate_questions_num(incorrect.count(),
                                                                                      half_correct.count(),
                                                                                      correct.count())
@@ -32,28 +32,24 @@ class User(AbstractUser):
                                half_correct.order_by('?')[:half_correct_num],  # частичные
                                correct.order_by('?')[:correct_num],  # верные
                                ))
-        shuffle(questions)
-        test = Test.objects.create(user=self, num=Test.objects.filter(user=self).count())
+        seed = randint(0, 1000)
+        test = Test.objects.create(user=self, num=Test.objects.filter(user=self).count() + 1, seed=seed)
         result = []
         for question_user in questions:
             question = question_user.question
             test.questions.add(question)
-            result.append((question, question.get_answers()))
+        questions = list(test.questions.all())
+        Random(seed).shuffle(questions)
+        for question in questions:
+            question_answers = question.get_answers()
+            shuffle(question_answers)
+            result.append((question, question_answers))
         test.save()
         return test, result
 
-    @staticmethod
-    def _is_unsubmitted_test(test):
+    def has_unsubmitted_test(self):
         """Проверка на то, есть ли не пройденный тест"""
-        return not UserAttempt.objects.filter(test=test).exists()
-
-    @staticmethod
-    def _get_unsubmitted_test_questions(test):
-        """Получить вопросы с не пройденного теста"""
-        result = []
-        for question in test.questions.all():
-            result.append((question, question.get_answers()))
-        return test, result
+        return Test.objects.filter(user=self, completed=False).exists()
 
     @staticmethod
     def _calculate_questions_num(incorrect: int, half_correct: int, correct: int) -> Tuple[int, int, int]:
@@ -103,12 +99,13 @@ class User(AbstractUser):
         QuestionUser.objects.bulk_create([QuestionUser(question=question, user=self) for question in Question.objects.all()])
 
     def progress(self):
-        done_quests = len(QuestionUser.objects.filter(done=2))
-        progr = int(done_quests/len(Question.objects.all())) * 100
+        done_quests = QuestionUser.objects.filter(user=self, done=2).count()
+        all_questions = Question.objects.filter(active=True).count() or 1
+        progr = int((done_quests / all_questions) * 100)
         return progr
 
     def all_user_tests(self):
-        return list(Test.objects.filter(user=self).order_by('-id'))
+        return list(Test.objects.filter(user=self, completed=True).order_by('-start_date'))
 
 
 class Question(models.Model):
@@ -118,6 +115,7 @@ class Question(models.Model):
 
     title = models.CharField(max_length=100, default='Вопрос', verbose_name='Заголовок')
     text = models.TextField(verbose_name="Текст вопроса")
+    active = models.BooleanField(default=True, verbose_name='Активный')
 
     def save(self, *args, **kwargs):
         """
@@ -125,17 +123,19 @@ class Question(models.Model):
         Сделано, чтобы знать пройден вопрос или нет
         """
         super(Question, self).save(*args, **kwargs)
-        for user in User.objects.all():
-            QuestionUser(question=self, user=user).save()
+        if not QuestionUser.objects.filter(question=self).exists():
+            for user in User.objects.all():
+                QuestionUser(question=self, user=user).save()
 
     def get_answers(self):
         """Варианты ответа на вопрос"""
-        return tuple(QuestionAnswer.objects.filter(question=self))
+        return list(QuestionAnswer.objects.filter(question=self))
 
     def correct_answers(self, test):
         cnt = 0
         count_of_correct = QuestionAnswer.objects.filter(question=self, correct=True).count()
-        # last_test = Test.objects.filter(questions__in=self.question).order_by('-start_date').first()
+        if count_of_correct == 0:
+            return 0
         user_answers = list(
             map(lambda x: x.question_answer,
                 UserAttempt.objects.filter(test=test, question=self)))
@@ -145,26 +145,32 @@ class Question(models.Model):
             elif answer.correct and answer not in user_answers:
                 cnt -= 1
             elif not answer.correct and answer in user_answers:
-                cnt += 1
+                cnt -= 1
         res = cnt / count_of_correct
         if res == 1:
-            return "верно"
+            return 2  # верно
         elif res >= 0.5:
-            return "частично"
+            return 1  # частично верно
         elif res < 0.5:
-            return "неверно"
+            return 0  # верно
 
     def __str__(self):
         return self.title
 
 
 class QuestionUser(models.Model):
+    class Meta:
+        verbose_name = 'Степень пройденности каждого вопроса'
+        verbose_name_plural = 'Степени пройденности каждого вопроса'
     question = models.ForeignKey('Question', on_delete=models.CASCADE)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     done = models.IntegerField(default=0)  # 0 - не пройден(неверный), 1 - частично верно, 2 - верно
 
 
 class QuestionAnswer(models.Model):  # ответ на каждый чекбокс
+    class Meta:
+        verbose_name = 'Ответ на вопрос'
+        verbose_name_plural = 'Ответы на вопросы'
     text = models.TextField(verbose_name='Текст варианта ответа')
     correct = models.BooleanField(verbose_name='Правильный ответ?')
     question = models.ForeignKey("Question", on_delete=models.CASCADE)
@@ -183,14 +189,27 @@ class UserAttempt(models.Model):
 
 
 class Test(models.Model):
+    class Meta:
+        verbose_name = 'Тест'
+        verbose_name_plural = 'Тесты'
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     start_date = models.DateTimeField(auto_now_add=True)
     num = models.IntegerField()
     questions = models.ManyToManyField(Question)
+    seed = models.IntegerField()
+    progress = models.IntegerField(default=0)
+    completed = models.BooleanField(default=False)
 
     @classmethod
     def get_last_tests(cls, count=15):
-        return list(Test.objects.order_by('-start_date')[:count])
+        return list(Test.objects.filter(completed=True).order_by('-start_date')[:count])
+
+    def get_test_questions(self):
+        """Получить вопросы с не пройденного теста"""
+        result = []
+        for question in self.questions.all():
+            result.append((question, question.get_answers()))
+        return self, result
 
     def count_of_done(self):
         cnt = 0
@@ -201,21 +220,36 @@ class Test(models.Model):
                 cnt += 1
         return cnt
 
-    def get_results(self) -> list:
-        if User._is_unsubmitted_test(self):
+    def get_results(self, user) -> list:
+        if user.has_unsubmitted_test():
             return []
         result = list()
-        for num, question in enumerate(self.questions.all()):
+        questions = list(self.questions.all())
+        Random(self.seed).shuffle(questions)
+        for num, question in enumerate(questions, 1):
             result.append((num, question.text, question.correct_answers(self)))
         return result
+
+    def set_results(self):
+        """Изменяет степень пройденности в зависимости от результата"""
+        for question in self.questions.all():
+            qu = QuestionUser.objects.get(user=self.user, question=question)
+            qu.done = question.correct_answers(self)
+            qu.save()
+        self.progress = int((QuestionUser.objects.filter(user=self.user, done=2, question__active=True).count()
+                             / Question.objects.count()) * 100)
+        self.completed = True
+        self.save()
 
 
 def set_data(request):
     """Фиксирует попытку/ответ пользователя на тест в базе данных"""
+    test = Test.objects.get(id=int(request.POST.get("test_id")))
     for question_id in request.POST:
         if question_id.startswith("q_"):
             for answer_id in request.POST.getlist(question_id):
-                UserAttempt(test=Test.objects.get(id=int(request.POST.get("test_id"))),
+                UserAttempt(test=test,
                             question=Question.objects.get(id=int(question_id[2:-2])),
                             question_answer=QuestionAnswer.objects.get(id=int(answer_id[7:]))
                             ).save()
+    test.set_results()
