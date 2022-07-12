@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
-from .models import Question, QuestionAnswer, UserAttempt, User, QuestionUser
+from .models import Question, QuestionAnswer, UserAttempt, User, QuestionUser, Test
 from django.forms import TextInput, Textarea
 from django.db import models
 
@@ -31,4 +31,8 @@ class QuestionAdmin(admin.ModelAdmin):
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Question, QuestionAdmin)
+admin.site.register(QuestionUser)
+admin.site.register(QuestionAnswer)
+admin.site.register(UserAttempt)
+admin.site.register(Test)
 admin.site.unregister(Group)

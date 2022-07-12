@@ -11,20 +11,29 @@ def main_page(request):
 
 
 @login_required
-def test_results(request):
-    return HttpResponse('Test results')
+def test_results(request, test_id):
+    test = Test.objects.get(id=test_id)
+    if test.user != request.user:
+        return redirect("/")
+    test_result = test.get_results(request.user)
+    if test_result:
+        return render(request, "exam_testing/results.html", context={"questions": test_result,
+                                                                     "test_num": test.num,
+                                                                     })
+    else:
+        return redirect("/test/")
 
 
 def headpage(request):
     last_tests = Test.get_last_tests()
     if request.user.is_anonymous:
         return render(request, 'exam_testing/headpage_anon.html', context={'last_tests': last_tests})
-    username = request.user.username
     self_progr = request.user.progress()
     user_tests = request.user.all_user_tests()
-
-    return render(request, 'exam_testing/headpage.html', context={'username': username, 'last_tests': last_tests,
-                                                                  'self_progr': self_progr, 'user_tests': user_tests})
+    return render(request, 'exam_testing/headpage.html', context={'last_tests': last_tests,
+                                                                  'self_progr': self_progr,
+                                                                  'user_tests': user_tests
+                                                                  })
 
 
 @login_required
@@ -32,7 +41,8 @@ def make_test(request):
     """Рендер страницы с тестом"""
     if request.method == "POST":
         set_data(request)
-        return redirect('/result/')
+        test_id = request.POST.get('test_id')
+        return redirect(f'/results/{test_id}/')
     if request.method == "GET":
         test, test_questions = User.generate_test_questions(request.user)
         test_questions = list(enumerate(test_questions, 1))
